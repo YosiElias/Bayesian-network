@@ -1,0 +1,115 @@
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+public class ReadXmlDomParser {
+
+    private static final String FILENAME = "big_net.xml";
+
+    public static void main(String[] args) {
+
+        BayesianNetwork net = new BayesianNetwork();
+
+        // Instantiate the Factory
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+        try {
+
+            // optional, but recommended
+            // process XML securely, avoid attacks like XML External Entities (XXE)
+            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+            // parse XML file
+            DocumentBuilder db = dbf.newDocumentBuilder();
+
+            Document doc = db.parse(new File(FILENAME));
+
+            // optional, but recommended
+            // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+            doc.getDocumentElement().normalize();
+
+            System.out.println("Root Element :" + doc.getDocumentElement().getNodeName());
+            System.out.println("------");
+
+            // get <VARIABLE>
+            NodeList listVar = doc.getElementsByTagName("VARIABLE");
+            int i=0;
+            Node node = listVar.item(i);
+            while (node != null){
+
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) node;
+                    String name = element.getElementsByTagName("NAME").item(0).getTextContent();
+                    Variable v = new Variable(name);
+                    NodeList listOut = element.getElementsByTagName("OUTCOME");
+                    for (int j = 0; j < listOut.getLength(); j++) {
+                        v.addOutCome(element.getElementsByTagName("OUTCOME").item(j).getTextContent());
+                    }
+                    // get text
+                    net.addVar(v);
+                }
+                i++;
+                node = listVar.item(i);
+            }
+
+
+            // get <DEFINITION>
+            NodeList listDef = doc.getElementsByTagName("DEFINITION");
+            i=0;
+            Node nodeDef = listDef.item(i);
+            while (nodeDef != null){
+
+                if (nodeDef.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) nodeDef;
+                    String name = element.getElementsByTagName("FOR").item(0).getTextContent();
+                    Variable v = net.getVar(name);
+
+                    if (element.getElementsByTagName("GIVEN") != null) {
+                        NodeList listGiv = element.getElementsByTagName("GIVEN");
+                        for (int j = 0; j < listGiv.getLength(); j++) {
+                            String parentName = element.getElementsByTagName("GIVEN").item(j).getTextContent();
+                            Variable parent = net.getVar(parentName);
+                            v.addParents(parent);
+                            parent.addChildren(v);
+                        }
+                    }
+
+                    String[] table = element.getElementsByTagName("TABLE").item(0).getTextContent().split(" ");
+                    v.makeTable(table);
+//                    for(int k = 0; k < table.length; k++) {
+//                        List<String> l = new ArrayList<String>(); // condiTable(v, k, table);
+//                        l.add("A");
+////                        v.addTable(l, (double)Double.parseDouble(table[k]));
+//                    }
+
+                    // get text
+//                    System.out.println(v);
+                }
+                i++;
+                nodeDef = listDef.item(i);
+            }
+
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
+//new String[]{"E", "B", "A", "J", "M"}
+        System.out.println(net);
+
+
+
+    }
+
+
+}
