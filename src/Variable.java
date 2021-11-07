@@ -17,8 +17,16 @@ public class Variable {
                 children = new ArrayList<Variable>();
                 outCome = new ArrayList<String>();
                 keyToTable = new ArrayList<List<String>>();
-//                table = new LinkedHashMap<List<String>, Double>();
         }
+//        public Variable(Variable other) {
+//                this.name = other.name;
+//                parents = new ArrayList<Variable>();
+//                children = new ArrayList<Variable>();
+//                outCome = new ArrayList<String>();
+//                keyToTable = new ArrayList<List<String>>();
+////                table = new LinkedHashMap<List<String>, Double>();
+//        }
+
 
         public void makeTable(String [] probaArr){
                 int row = outCome.size(), col = 2 + parents.size();
@@ -106,6 +114,13 @@ public class Variable {
 
         private String tabletoString() {
                String ans = "";
+               for (Variable p: parents)
+                       ans += ""+p.name+"\t";
+               ans += ""+this.name+"\t"+"P"+"\n";
+                for (int i = 0; i < parents.size()+2; i++) {
+                        ans += "-\t";
+                }
+                ans += "\n";
                 for(String[] row : table) {
                         ans += printRow(row);
                 }

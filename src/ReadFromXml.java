@@ -14,14 +14,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ReadXmlDomParser {
+public class ReadFromXml {
 
-    private static final String FILENAME = "big_net.xml";
 
-    public static void main(String[] args) {
-
+    public static BayesianNetwork readBuild(String fileName) {
         BayesianNetwork net = new BayesianNetwork();
-
         // Instantiate the Factory
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -34,7 +31,7 @@ public class ReadXmlDomParser {
             // parse XML file
             DocumentBuilder db = dbf.newDocumentBuilder();
 
-            Document doc = db.parse(new File(FILENAME));
+            Document doc = db.parse(new File(fileName));
 
             // optional, but recommended
             // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
@@ -88,14 +85,6 @@ public class ReadXmlDomParser {
 
                     String[] table = element.getElementsByTagName("TABLE").item(0).getTextContent().split(" ");
                     v.makeTable(table);
-//                    for(int k = 0; k < table.length; k++) {
-//                        List<String> l = new ArrayList<String>(); // condiTable(v, k, table);
-//                        l.add("A");
-////                        v.addTable(l, (double)Double.parseDouble(table[k]));
-//                    }
-
-                    // get text
-//                    System.out.println(v);
                 }
                 i++;
                 nodeDef = listDef.item(i);
@@ -104,11 +93,7 @@ public class ReadXmlDomParser {
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
-//new String[]{"E", "B", "A", "J", "M"}
-        System.out.println(net);
-
-
-
+        return net;
     }
 
 
