@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 
@@ -7,11 +6,14 @@ public class RunAll {
     public BayesianNetwork net;
     public Queue<String> qTxt;
     private BayesBall bbAlgo;
-    String ans;
+    private VariableElimination varElimAlgo;
+    private String xmlfile;
+    private String ans;
 
     public RunAll(String txtFile) throws Exception {
         this.qTxt = ReadFromTxt.read(txtFile);
-        this.net = ReadFromXml.readBuild(qTxt.poll());
+        xmlfile = qTxt.poll();
+        this.net = ReadFromXml.readBuild(xmlfile);
         this.ans = "";
     }
 
@@ -21,13 +23,15 @@ public class RunAll {
             String line = (qTxt.poll());
             if (line.charAt(1) == '-')
                 ans += go2BBAlgo(line);
-            if (line.charAt(0) == 'P')
-                ans += go2VareLim(line);
+            if (line.charAt(0) == 'P') {
+                ans += go2VarElim(line);
+                net = ReadFromXml.readBuild(xmlfile);   //read again because of ovveraid this net in VariableElimination algo
+            }
         }
         return ans;
     }
 
-    private String go2VareLim(String line) {
+    private String go2VarElim(String line) {
         int i=2;
         String qName = "";
         while (line.charAt(i) != '=') {
@@ -44,6 +48,7 @@ public class RunAll {
         int nE = numOfE(line, i);
         String[][] evidens = new String[nE][2];
         i++;    //skip the char '|'
+        //evidens[i] example: ["A","T"]
         for (int j = 0; j < evidens.length; j++) {
             String eName = "";
             while (line.charAt(i) != '=') {
@@ -79,7 +84,8 @@ public class RunAll {
 //        }
 //        System.out.println("\norder: "+Arrays.toString(order.toArray()));
 
-        return "";
+        varElimAlgo = new VariableElimination(qName, qValue, evidens, order, net);
+        return varElimAlgo.get_pAns() + "\n";
     }
 
     private int numOfE(String line, int i) {

@@ -11,6 +11,12 @@ public class BayesBall {
     private Map<String, Variable> markedOnBottom;
     private static final int fromCild =0, fromParent =1;
 
+    /**
+     *
+     * @param a variable 'a' to start from
+     * @param given list of given variable
+     * @param net the all net
+     */
     public BayesBall(Variable a, List<String> given, BayesianNetwork net) {
         qVar = new LinkedList<Variable>();
         qVar.add(a);
@@ -26,9 +32,35 @@ public class BayesBall {
     }
 
     /**
+     *
+     * @param a variable 'a' to start from
+     * @param evidenceArr array of given variable and thar values
+     * @param net the all net
+     */
+    public BayesBall(Variable a, String[][] evidenceArr, BayesianNetwork net) {
+        qVar = new LinkedList<Variable>();
+        qVar.add(a);
+        qFrom = new LinkedList<Integer>();
+        qFrom.add(fromCild);
+        visited = new LinkedHashMap<String, Variable>();
+        markedOnTop = new LinkedHashMap<String, Variable>();
+        markedOnBottom = new LinkedHashMap<String, Variable>();
+        given = new LinkedList<String>();
+        for (int i = 0; i < evidenceArr.length; i++)
+        {
+            this.given.add(evidenceArr[i][0]);
+        }
+        this.a = a;
+        this.net = net;
+
+    }
+
+
+
+    /**
      * @return visited List represent all nodes that affect a given the List 'given'
      */
-    private Map<String, Variable> BbAlgo() {
+    public Map<String, Variable> BbAlgo() {
         while (qVar.size() != 0) {
             Variable j = qVar.poll();
             visited.put(j.name, j); //"color" 'v' as visited

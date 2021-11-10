@@ -18,13 +18,13 @@ public class Variable {
                 outCome = new ArrayList<String>();
                 keyToTable = new ArrayList<List<String>>();
         }
+
 //        public Variable(Variable other) {
 //                this.name = other.name;
 //                parents = new ArrayList<Variable>();
 //                children = new ArrayList<Variable>();
 //                outCome = new ArrayList<String>();
 //                keyToTable = new ArrayList<List<String>>();
-////                table = new LinkedHashMap<List<String>, Double>();
 //        }
 
 
@@ -143,6 +143,18 @@ public class Variable {
 
                 }
                 return ans;
+        }
+
+        public String[][] getTable() { return table; }
+
+        public void updateTable(List<Integer> relevantRowsFromItSelf) {
+                String[][] newTable = new String[relevantRowsFromItSelf.size()][this.table[0].length];
+                for (int r = 0; r < newTable.length; r++) {     //run on rows
+                        for (int c = 0; c < this.table[0].length; c++) {        //run on columns
+                                newTable[r][c] = table[relevantRowsFromItSelf.get(r)][c];
+                        }
+                }
+                table = newTable;
         }
 
 

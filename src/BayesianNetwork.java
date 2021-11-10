@@ -17,6 +17,15 @@ public class BayesianNetwork {
         names = new ArrayList<String>();
     }
 
+//    //copy constructor
+//    public BayesianNetwork(BayesianNetwork other) {
+//        net = new LinkedHashMap<String, Variable>();
+//        for (String varName:other.getNames()) {
+//            Variable v = new Variable(other.getVar(varName))
+//        }
+//        names = new ArrayList<String>();
+//    }
+
 
     public Variable getVar(String name) {
         if (net.containsKey(name))

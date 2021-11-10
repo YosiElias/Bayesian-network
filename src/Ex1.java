@@ -1,3 +1,4 @@
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,19 +10,20 @@ public class Ex1 {
 
 
     public static void main(String[] args) throws Exception {
-//        System.out.println(ReadFromXml.readBuild(FILENAME_BIG));
+        System.out.println(ReadFromXml.readBuild(FILENAME_ALARM));
+//        BayesianNetwork net = ReadFromXml.readBuild(FILENAME_ALARM);
+//        System.out.println(Arrays.toString(net.getVar("A").getTable()[4]));
+//        System.out.println(net.getVar("A").getTable()[4][net.getVar("A").getTable()[4].length-1]);
+//        System.out.println(net.getVar("A"));
         RunAll run = new RunAll("my_input.txt");
-        System.out.println(run.runTxt());//yes  no  no  yes no
-//
-//        String[][] evidens = {{"A", "T"}, {"A", "T"},{"A", "T"},{"A", "T"}};
-//        System.out.println(evidens.length);
-//        String[][] a = new String[4][2];
-//        System.out.println(a[0].length);
+        run.runTxt();
+//        System.out.println(run.runTxt());//yes  no  no  yes no
 
-//        List<String> order = new ArrayList<String>();
-//        order.add("1");
-//        order.add("2");
-//        System.out.println(order.get(0));
+//        System.out.println(net.getVar("A").getParents().indexOf(net.getVar("E")));
+
+
+//        DecimalFormat df = new DecimalFormat("#0.00000");
+//        System.out.println(df.format(1.912385));
 
     }
 }
