@@ -111,5 +111,31 @@ public class BayesBall {
             return "yes";
     }
 
+    /**
+     *
+     * @param relevantVar list of dependence variable from BBAlgo
+     * @return list of variable that are relevant for J&E Algo, i.e. all the parent and parent-parent of evidence and query variable
+     */
+    public Map<String,Variable> PrntFiltering(Map<String,Variable> relevantVar) {
+        Map<String, Variable> newRelevantVar = new LinkedHashMap<String, Variable>();
+        Queue<Variable> q_Var = new LinkedList<Variable>();
+        for (int i = 0; i < given.size(); i++)
+        {
+            q_Var.add(net.getVar(given.get(i)));
+        }
+        q_Var.add(a);   //query variable
+
+        while (q_Var.size() != 0) {
+            Variable j = q_Var.poll();
+            if (!newRelevantVar.containsValue(j)) {
+                newRelevantVar.put(j.name, j); //"color" 'v' as visited
+
+                for (Variable parent : j.getParents()) {
+                    q_Var.add(parent);
+                }
+            }
+        }
+        return newRelevantVar;
+    }
 }
 

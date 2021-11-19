@@ -21,7 +21,7 @@ public class RunAll {
     public String runTxt() {
         while (qTxt.size() != 0){
             String line = (qTxt.poll());
-            if (line.charAt(1) == '-')
+            if (line.charAt(0) != 'P')
                 ans += go2BBAlgo(line);
             if (line.charAt(0) == 'P') {
                 ans += go2VarElim(line);

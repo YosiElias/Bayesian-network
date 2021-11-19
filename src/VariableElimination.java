@@ -12,6 +12,7 @@ public class VariableElimination {
     private int _mulNum;
     private int _addNum;
     private BayesianNetwork _net;
+    private List<String> _Names;
     private final DecimalFormat _df = new DecimalFormat("#0.00000");
 
     public VariableElimination(String qName, String qValue, String[][] evidens, List<String> order, BayesianNetwork net) {
@@ -20,6 +21,10 @@ public class VariableElimination {
         _mapEvidence = new LinkedHashMap<String, String>();
         for (int i = 0; i < _evidence.length; i++) {
             _mapEvidence.put(_evidence[i][0], _evidence[i][1]);
+        }
+        _Names = new ArrayList<String>();
+        for (int i = 0; i < net.getNames().size(); i++) {
+            _Names.add(net.getNames().get(i));
         }
         _order = order;
         _qName = qName;
@@ -44,9 +49,14 @@ public class VariableElimination {
         //take all relevant variable:
         BayesBall b = new BayesBall(q, _evidence, _net);
         Map<String, Variable> relevantVar = b.BbAlgo();
-        for (String varName:_net.getNames()) {
-            if (!relevantVar.containsKey(varName))
-                _net.getNames().remove(varName);
+        relevantVar = b.PrntFiltering(relevantVar);
+//        for (String varName: _net.getNames()) {
+            for (int i = 0; i < _net.getNames().size(); i++) {
+                String varName = _net.getNames().get(i);
+            if (!relevantVar.containsKey(varName)) {
+                _Names.remove(varName);
+                System.out.println(varName);
+            }
         }
         //reduce of given evidence:
         reduceCpts();
@@ -60,29 +70,54 @@ public class VariableElimination {
     }
 
     private void j_e(String byVar, List<Factor> relevant) {
-        while (relevant.size() != 1)
+        Factor je_Factor;
+        while (relevant.size() > 1)    //>
         {
             Factor fmin = minF(relevant);
             Factor fbig = minF(relevant);
-            //Todo: add option to sort by 'Haski'
-            Factor je_Factor = fbig.join(fmin, byVar);
-            je_Factor = eliminate(je_Factor, byVar);
+            je_Factor = fbig.join(fmin, byVar);
             relevant.add(je_Factor);
         }
+//        je_Factor = relevant.get(0).eliminate(byVar);
+
     }
 
 //    private Factor join(Factor f1, Factor f2) {
 
-
+    /**
+     * @return min factor size to start with.
+     */
     private Factor minF(List<Factor> relevant) {
         Factor min = relevant.get(0);
         for (Factor f:relevant)
         {
-            if (f.getNameV().size() < min.getNameV().size())
+//            if (f.getNameV().size() < min.getNameV().size())  //change un-safe, Todo: check this change
+            if (f.getSizeOfTable() < min.getSizeOfTable())
                 min = f;
+            else if (f.getSizeOfTable() == min.getSizeOfTable())
+                min = selectByHaski(f, min);
         }
         relevant.remove(min);
         return min;
+    }
+
+    //sum all names in factor and return the one with min haski value
+    private Factor selectByHaski(Factor f, Factor min) {
+        int fSize = 0, minSize = 0;
+        for (int i = 0; i < f.getNameV().size(); i++) {
+            for (int j = 0; j < f.getNameV().get(i).length(); j++) {
+                fSize += (int)f.getNameV().get(i).charAt(j);    //Todo: check this cast if work and give the Haski value
+            }
+        }
+        for (int i = 0; i < min.getNameV().size(); i++) {
+            for (int j = 0; j < min.getNameV().get(i).length(); j++) {
+                minSize += (int)min.getNameV().get(i).charAt(j);    //Todo: check this cast if work and give the Haski value
+            }
+        }
+        if (minSize<fSize)
+            return min;
+        else
+            return f;
     }
 
     /**
@@ -102,7 +137,7 @@ public class VariableElimination {
 
     private void creatFactors() {
         _factors = new ArrayList<Factor>();
-        for (String varName:_net.getNames())    //getNames is updated
+        for (String varName:_Names)    //getNames is updated
         {
             Factor f = new Factor(_net.getVar(varName), _net);
             _factors.add(f);
@@ -113,7 +148,7 @@ public class VariableElimination {
      * update all net to relevant table without 'not needed' value
      */
     private void reduceCpts() {
-        for (String varName:_net.getNames())
+        for (String varName:_Names)
         {
             if (_mapEvidence.containsKey(varName)) //if the variable is evidence:
             {
