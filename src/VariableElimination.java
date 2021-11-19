@@ -55,7 +55,7 @@ public class VariableElimination {
                 String varName = _net.getNames().get(i);
             if (!relevantVar.containsKey(varName)) {
                 _Names.remove(varName);
-                System.out.println(varName);
+//                System.out.println(varName);
             }
         }
         //reduce of given evidence:
@@ -66,19 +66,46 @@ public class VariableElimination {
             List<Factor> relevant = relevantFactor(byVar);
             j_e(byVar,relevant);
         }
-        return "***********";
+        for (int i = 0; i < _Names.size(); i++) {
+            if (!_order.contains(_Names.get(i)) && !_Names.get(i).equals(_qName))
+            {
+                String byVar = _Names.get(i);
+                List<Factor> relevant = relevantFactor(byVar);
+                j_e(byVar,relevant);
+            }
+        }
+        List<Factor> relevant = relevantFactor(_qName);
+        j_e(_qName,relevant);
+        double[] finalTable = _factors.get(0).getValue(_qValue);
+        double prob=Double.MAX_VALUE;
+        if (finalTable[1] != 0) //there is anther value except of _qValue
+        {
+            _addNum++;
+            prob = finalTable[0] / finalTable[1];   // normalize
+        }
+        DecimalFormat df = new DecimalFormat("#0.00000");
+        if (prob==Double.MAX_VALUE) System.err.println("Error: not find prob");
+        return  "" + df.format(prob) + "," + _addNum + "," + _mulNum;
     }
 
     private void j_e(String byVar, List<Factor> relevant) {
         Factor je_Factor;
-        while (relevant.size() > 1)    //>
+        if (relevant.size()==0)
+            return;
+        while (relevant.size() > 1)    //!=
         {
             Factor fmin = minF(relevant);
             Factor fbig = minF(relevant);
             je_Factor = fbig.join(fmin, byVar);
+            _mulNum++;
             relevant.add(je_Factor);
         }
-//        je_Factor = relevant.get(0).eliminate(byVar);
+        je_Factor = relevant.get(0).eliminate(byVar);
+        _addNum++;
+        if (je_Factor.getNameV().size() != 1 || _factors.size()==0)   //remove factor if is nameV size = 1, because nameV = {'_P_'}
+            _factors.add(je_Factor);
+//        if (je_Factor.getNameV().size()==0)
+//            delete this factor...
 
     }
 
@@ -98,6 +125,7 @@ public class VariableElimination {
                 min = selectByHaski(f, min);
         }
         relevant.remove(min);
+        _factors.remove(min);
         return min;
     }
 

@@ -12,6 +12,7 @@ public class Factor {
     private Map<String, Integer> _indexOtherNames;
     private Map<String, Integer> _indexNewNames;
     private Map<String, List<String>> _outcomFmin;
+    private Map<String, List<String>> _outcomThis;
 
 
 
@@ -125,11 +126,6 @@ public class Factor {
             c++;  //go to the next var (in the next column)
         }
 
-        // Todo: dbs, only for testing.
-//        for (int i = 0; i < newTable.length; i++) {
-//            System.out.println("\n"+ Arrays.toString(newTable[i]));
-//        }
-        System.out.println("**********************\n\n**********************");
 
         //fill the value of 'P' in newTable:
         for (int i = 0; i < newTable.length; i++)      //run on rows of new table
@@ -175,6 +171,7 @@ public class Factor {
 //        }
 
         // Todo: dbs, only for testing.
+        System.out.println("********************** - Join by - "+byVar+" - "+this.nameV+" & "+fmin.nameV+"**********************");
         for (int i = 0; i < newTable.length; i++) {
             System.out.println("\n"+ Arrays.toString(newTable[i]));
         }
@@ -204,6 +201,28 @@ public class Factor {
             }
         }
     }
+
+    private void outcomeOfThis() {
+        _outcomThis = new LinkedHashMap<String, List<String>>();
+        for (int r = 0; r < _table.length; r++)
+        {
+            for (int i = 0; i < _indexOriginalNames.size() -1; i++) {
+                String name = nameV.get(i);
+                String out = _table[r][_indexOriginalNames.get(name)];
+                if (_outcomThis.containsKey(name))
+                {
+                    if (!_outcomThis.get(name).contains(out))
+                        _outcomThis.get(name).add(out);
+                }
+                else
+                {
+                    _outcomThis.put(name, new ArrayList<String>());
+                    _outcomThis.get(name).add(out);
+                }
+            }
+        }
+    }
+
 
     private double getPofRowOther(String[] row, String[][] table) {
         int r;
@@ -364,8 +383,104 @@ public class Factor {
         return this._table.length * this._table[0].length;
     }
 
+    public Factor eliminate(String byVar) {
+        outcomeOfThis();
+        this.nameV.remove(byVar);
+        int rows = this._table.length / _outcomThis.get(byVar).size();
+        int columns = this._table[0].length -1;
+        if (columns == 1)   //is empty factor
+        {
+            if (nameV.get(0) != "_P_") System.err.println("The factor is not really empty");    //Todo: dbs
+            return new Factor(this._table, this.nameV,_net);    //Todo: check if nameV really contain only 'P'
+        }
+        String[][] newTable = new String[rows][columns];
+        String out = _outcomThis.get(byVar).get(0);
+        int byVarColumn = _indexOriginalNames.get(byVar);
+        for (int r = 0, r1=0; r < this._table.length; r++)
+        {
+            if (_table[r][byVarColumn] == out)
+            {   //take only one outcome from byVar
+                for (int c = 0, c1 = 0; c < this._table[0].length - 1; c++) {
+                    if (c != byVarColumn) {   //not copy byVarColumn
+                        newTable[r1][c1] = this._table[r][c];
+                        c1++;
+                    }
+                }
+                r1++;
+            }
+        }
 
-//    public Factor eliminate(String byVar) {
-//
-//    }
+        for (int i = 0; i < newTable.length; i++)      //run on rows of new table
+        {
+            String[] row = newTable[i];
+            double pOfElim = getPofElim(row, byVar);
+//            DecimalFormat df = new DecimalFormat("#0.00000");
+            newTable[i][newTable[0].length-1] = ""+pOfElim;   //Todo: maybe add it here -> df.format(
+        }
+
+
+
+        this._indexOriginalNames.clear();
+        this._outcomThis.clear();
+        System.out.println("********************** - elimination by - "+byVar+ " - **********************");
+//         Todo: dbs, only for testing.
+        for (int i = 0; i < newTable.length; i++) {
+            System.out.println("\n"+ Arrays.toString(newTable[i]));
+        }
+        System.out.println("**********************\n\n**********************");
+
+        return new Factor(newTable, this.nameV, _net);
+    }
+
+    private double getPofElim(String[] row, String byVar) {
+        int r;
+        double ans = 0;
+        for (r = 0; r < this._table.length; r++)    //run on rows of small table
+        {
+            int n;
+            for (n = 0; n < nameV.size()-1; n++)  //run on all names in newTable
+            {
+                String name = nameV.get(n);
+                if (name != byVar) //if name is byVar name: //Todo: not need this if. dbs
+                {
+                    int c = _indexOriginalNames.get(name);
+                    if (row[n] != this._table[r][c])     //row[_indexNewNames.get(name)]
+                        break;  //continue to next row  //Todo: check if this really break the loop of 'n'
+                }
+            }
+            if (n == nameV.size() - 1)  //i.e. all the name are equal
+            {
+                ans += Double.parseDouble(this._table[r][_table[0].length -1]);
+            }
+        }
+        if (ans==0) System.err.println("not possible that not find any row appropriate");    //Todo: dbs
+        return ans;
+    }
+
+
+    public double[] getValue(String qValue) {
+        double[] ans = new double[2];
+        ans[1] = 0;
+        DecimalFormat df = new DecimalFormat("#0.00000");
+        for (int i = 0; i < this._table.length; i++) {
+            ans[1] += Double.parseDouble(this._table[i][1]);
+            if (this._table[i][0].equals(qValue))
+              ans[0] =  Double.parseDouble(this._table[i][1]);
+        }
+        return ans;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
