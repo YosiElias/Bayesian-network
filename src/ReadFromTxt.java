@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 // reading from Text File
 // using Scanner Class
@@ -15,5 +17,15 @@ public class ReadFromTxt
         while (sc.hasNextLine())
             ans.add(sc.nextLine());
     return ans;
+    }
+    public static void write(String fileName, String str){
+        try {
+            FileWriter myWriter = new FileWriter(fileName);
+            myWriter.write(str);
+            myWriter.close();
+        } catch (
+                IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -63,19 +63,29 @@ public class VariableElimination {
         creatFactors();
         for (int i = 0; i < _order.size(); i++) {
             String byVar = _order.get(i);
-            List<Factor> relevant = relevantFactor(byVar);
-            j_e(byVar,relevant);
-        }
-        for (int i = 0; i < _Names.size(); i++) {
-            if (!_order.contains(_Names.get(i)) && !_Names.get(i).equals(_qName))
-            {
-                String byVar = _Names.get(i);
-                List<Factor> relevant = relevantFactor(byVar);
-                j_e(byVar,relevant);
+            if (_Names.contains(byVar)) {
+                List<Factor> relevant = relevantFactor(byVar, relevantVar);
+                j_e(byVar, relevant);
             }
         }
-        List<Factor> relevant = relevantFactor(_qName);
-        j_e(_qName,relevant);
+//        for (int i = 0; i < _Names.size(); i++) {
+//            if (!_order.contains(_Names.get(i)) && !_Names.get(i).equals(_qName))
+//                if (relevantVar.containsKey(_Names.get(i)))
+//                {
+//                    String byVar = _Names.get(i);
+//                    List<Factor> relevant = relevantFactor(byVar, relevantVar);
+//                    j_e(byVar,relevant);
+//                }
+//        }
+
+        List<Factor> relevant = relevantFactor(_qName, relevantVar);
+        for (int i = 0; i < _factors.size(); i++) { //remove not relevant factors from '_factor', i.e. evidence etc.
+            Factor f = _factors.get(i);
+            if (!relevant.contains(f))
+                _factors.remove(f);
+        }
+//        if (relevant.size() >1)   //Todo: seems like not need this if
+            j_e(_qName,relevant);
         double[] finalTable = _factors.get(0).getValue(_qValue);
         double prob=Double.MAX_VALUE;
         if (finalTable[1] != 0) //there is anther value except of _qValue
@@ -97,11 +107,11 @@ public class VariableElimination {
             Factor fmin = minF(relevant);
             Factor fbig = minF(relevant);
             je_Factor = fbig.join(fmin, byVar);
-            _mulNum++;
+            _mulNum += fbig.get_mulNum();
             relevant.add(je_Factor);
         }
         je_Factor = relevant.get(0).eliminate(byVar);
-        _addNum++;
+        _addNum += relevant.get(0).get_addNum();
         if (je_Factor.getNameV().size() != 1 || _factors.size()==0)   //remove factor if is nameV size = 1, because nameV = {'_P_'}
             _factors.add(je_Factor);
 //        if (je_Factor.getNameV().size()==0)
@@ -151,14 +161,19 @@ public class VariableElimination {
     /**
      *
      * @param byVar name of variable to factor by
+     * @param relevantVar
      * @return list of relevant factor to this variable
      */
-    private List<Factor> relevantFactor(String byVar) {
+    private List<Factor> relevantFactor(String byVar, Map<String, Variable> relevantVar) {
         List<Factor> relevant = new ArrayList<Factor>();
         for (Factor f:_factors)
         {
-            if (f.getNameV().contains(byVar))
-                relevant.add(f);
+            if (f.getNameV().contains(byVar))   //Todo: opshion but look like not relevant becouse the factor is filtered by relavant   //if this factor create from other factor and not directly from variable
+//                if (f.get_v() == null)
+                    relevant.add(f);
+//                else if (relevantVar.containsKey(f.get_v().name))   //if create from variable but this variable is relevant by BBAlgo & par=parent filter
+//                    relevant.add(f);
+
         }
         return relevant;
     }
@@ -167,8 +182,10 @@ public class VariableElimination {
         _factors = new ArrayList<Factor>();
         for (String varName:_Names)    //getNames is updated
         {
-            Factor f = new Factor(_net.getVar(varName), _net);
-            _factors.add(f);
+//            if (!_mapEvidence.containsKey(varName)) {   //create factor only if not evidence
+                Factor f = new Factor(_net.getVar(varName), _net);
+                _factors.add(f);
+//            }
         }
     }
 
@@ -176,8 +193,9 @@ public class VariableElimination {
      * update all net to relevant table without 'not needed' value
      */
     private void reduceCpts() {
-        for (String varName:_Names)
+        for (String varName:_net.getNames())   //Todo: --- try --- _Names
         {
+            //Todo: add delete of evidence from parent of other variable
             if (_mapEvidence.containsKey(varName)) //if the variable is evidence:
             {
                 Variable v = _net.getVar(varName);

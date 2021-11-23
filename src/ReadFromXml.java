@@ -37,8 +37,8 @@ public class ReadFromXml {
             // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
             doc.getDocumentElement().normalize();
 
-            System.out.println("Root Element :" + doc.getDocumentElement().getNodeName());
-            System.out.println("------");
+//            System.out.println("Root Element :" + doc.getDocumentElement().getNodeName());
+//            System.out.println("------");
 
             // get <VARIABLE>
             NodeList listVar = doc.getElementsByTagName("VARIABLE");
