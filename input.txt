@@ -9,3 +9,10 @@ P(B=T|J=T,M=T) E-A
 P(J=T|B=T) A-E-M
 P(J=T|B=T) M-E-A
 P(A=T|J=T,M=T,E=T,B=T)
+P(M=T|A=T) B-E-J
+
+
+#P(B0=v3|C3=T,B2=F,C2=v3) A2-D1-B3-C1-A1-B1-A3
+//0?  P(C2=v1|B1=F,B2=T) A2-C3-B3-C1-A1-B0-A3-D1
+P(C2=v1|A2=T) B2-B1-C3-B3-C1-A1-B0-A3-D1
+

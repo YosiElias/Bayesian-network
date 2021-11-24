@@ -13,6 +13,7 @@ public class VariableElimination {
     private int _addNum;
     private BayesianNetwork _net;
     private List<String> _Names;
+    private List<String> _independent;
     private final DecimalFormat _df = new DecimalFormat("#0.00000");
 
     public VariableElimination(String qName, String qValue, String[][] evidens, List<String> order, BayesianNetwork net) {
@@ -46,21 +47,30 @@ public class VariableElimination {
             return "" + ans + "," + _addNum + "," + _mulNum;
         }
         Variable q = _net.getVar(_qName);
-        //take all relevant variable:
+        // Take all relevant variable:
         BayesBall b = new BayesBall(q, _evidence, _net);
         Map<String, Variable> relevantVar = b.BbAlgo();
-        relevantVar = b.PrntFiltering(relevantVar);
-//        for (String varName: _net.getNames()) {
-            for (int i = 0; i < _net.getNames().size(); i++) {
-                String varName = _net.getNames().get(i);
+        _independent = new ArrayList<String>(); //Independent variable from BBAlgo
+        // Create independent list:
+        for (int i = 0; i < _net.getNames().size(); i++) {
+            String varName = _net.getNames().get(i);
             if (!relevantVar.containsKey(varName)) {
-                _Names.remove(varName);
-//                System.out.println(varName);
+                _independent.add(varName);
             }
         }
-        //reduce of given evidence:
+        relevantVar = b.PrntFiltering(relevantVar);
+        // Clean _Names from all not relevant variable, by filter on BBAlgo & par-parent:
+        for (int i = 0; i < _net.getNames().size(); i++) {
+            String varName = _net.getNames().get(i);
+            if (!relevantVar.containsKey(varName)) {
+                _Names.remove(varName);
+            }
+        }
+        // Reduce of given evidence and the independent variable from CPT:
         reduceCpts();
+        // Create factor from cleaned cpt's:
         creatFactors();
+        // Make Join & Eliminate on factors by the given order:
         for (int i = 0; i < _order.size(); i++) {
             String byVar = _order.get(i);
             if (_Names.contains(byVar)) {
@@ -77,7 +87,7 @@ public class VariableElimination {
 //                    j_e(byVar,relevant);
 //                }
 //        }
-
+        // Make Join & Eliminate on factors contain the qurie-variable:
         List<Factor> relevant = relevantFactor(_qName, relevantVar);
         for (int i = 0; i < _factors.size(); i++) { //remove not relevant factors from '_factor', i.e. evidence etc.
             Factor f = _factors.get(i);
@@ -85,12 +95,12 @@ public class VariableElimination {
                 _factors.remove(f);
         }
 //        if (relevant.size() >1)   //Todo: seems like not need this if
-            j_e(_qName,relevant);
+        j_e(_qName,relevant);
         double[] finalTable = _factors.get(0).getValue(_qValue);
         double prob=Double.MAX_VALUE;
         if (finalTable[1] != 0) //there is anther value except of _qValue
         {
-             int outSize_q = _net.getVar(_qName).getOutCome().size();
+            int outSize_q = _net.getVar(_qName).getOutCome().size();
             _addNum += outSize_q - 1;
             prob = finalTable[0] / finalTable[1];   // normalize
         }
@@ -171,7 +181,7 @@ public class VariableElimination {
         {
             if (f.getNameV().contains(byVar))   //Todo: opshion but look like not relevant becouse the factor is filtered by relavant   //if this factor create from other factor and not directly from variable
 //                if (f.get_v() == null)
-                    relevant.add(f);
+                relevant.add(f);
 //                else if (relevantVar.containsKey(f.get_v().name))   //if create from variable but this variable is relevant by BBAlgo & par=parent filter
 //                    relevant.add(f);
 
@@ -183,10 +193,22 @@ public class VariableElimination {
         _factors = new ArrayList<Factor>();
         for (String varName:_Names)    //getNames is updated
         {
-//            if (!_mapEvidence.containsKey(varName)) {   //create factor only if not evidence
-                Factor f = new Factor(_net.getVar(varName), _net);
-                _factors.add(f);
-//            }
+            Variable v = _net.getVar(varName);
+            boolean containIndependent = false;
+            for (int i = 0; i < _independent.size(); i++) {
+                for (Variable p: v.getParents())
+                {
+                    if (p.name.equals(_independent.get(i)))
+                    {
+                        containIndependent = true;
+                        break;
+                    }
+                }
+            }
+            if (!containIndependent) {   //create factor only if not contain independent variable
+            Factor f = new Factor(_net.getVar(varName), _net);
+            _factors.add(f);
+            }
         }
     }
 
