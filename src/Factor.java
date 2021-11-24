@@ -427,7 +427,7 @@ public class Factor {
             if (nameV.get(0) != "_P_") System.err.println("The factor is not really empty");    //Todo: dbs
             return new Factor(this._table, this.nameV,_net);    //Todo: check if nameV really contain only 'P'
         }
-        _addNum = rows;
+//        _addNum = rows;
         String[][] newTable = new String[rows][columns];
         String out = _outcomThis.get(byVar).get(0);
         int byVarColumn = _indexOriginalNames.get(byVar);
@@ -485,10 +485,11 @@ public class Factor {
             if (n == nameV.size() - 1)  //i.e. all the name are equal
             {
                 ans += Double.parseDouble(this._table[r][_table[0].length -1]);
-//                _addNum++;    //Todo: check if this is not the way noam want to count '_addNum'
+                _addNum++;    //Todo: check if this is not the way noam want to count '_addNum'
             }
         }
         if (ans==0) System.err.println("not possible that not find any row appropriate");    //Todo: dbs
+        _addNum--;
         return ans;
     }
 

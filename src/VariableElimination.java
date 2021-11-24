@@ -90,7 +90,8 @@ public class VariableElimination {
         double prob=Double.MAX_VALUE;
         if (finalTable[1] != 0) //there is anther value except of _qValue
         {
-            _addNum++;
+             int outSize_q = _net.getVar(_qName).getOutCome().size();
+            _addNum += outSize_q - 1;
             prob = finalTable[0] / finalTable[1];   // normalize
         }
         DecimalFormat df = new DecimalFormat("#0.00000");
