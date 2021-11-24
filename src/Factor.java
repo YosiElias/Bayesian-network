@@ -55,6 +55,7 @@ public class Factor {
 
     private List<Integer> oneValueColumns(String[][] table) {
         List<Integer> ans  = new ArrayList<Integer>();
+        List<String> nameToRemove = new ArrayList<String>();
         if (table[0].length != 2) { //only if not 2 columns
             for (int c = 0; c < table[0].length - 1; c++) {
                 String value = table[0][c];
@@ -65,10 +66,13 @@ public class Factor {
                 }
                 if (r == table.length) {  //all column is equals
                     ans.add(c);
-                    nameV.remove(c);
+                    nameToRemove.add(nameV.get(c));
                 }
             }
         } //Todo: --- try ---
+        for (String name : nameToRemove){
+            nameV.remove(name);
+        }
         return ans;
     }
 
@@ -140,12 +144,12 @@ public class Factor {
             {
                 firstloop = false;
                 slice = rows / outcomeOfMin.size();
+                if (slice==0) System.err.println("slice can't be 0!");  //Todo: dbs, internal test
             }
-            if (slice==0) System.err.println("slice can't be 0!");  //Todo: dbs, internal test
             else
             {
-                slice = rows / outcomeOfMin.size();
-                if (r % rows / outcomeOfMin.size()!=0)     System.err.println("number of rows is incorrect ");     //Todo: delete before submit
+                slice = slice / outcomeOfMin.size();    //Todo! chcange 'rows / outcomeOfMin.size()' to 'slice / outcomeOfMin.size()'
+                if (slice % outcomeOfMin.size()!=0)     System.err.println("number of rows is incorrect ");     //Todo: delete before submit
             }
             r=0;
             while (r<rows){ //run on all rows
@@ -270,7 +274,7 @@ public class Factor {
                 if (_indexOtherNames.containsKey(name)) //if name is belong to this table:
                 {
                     int c = _indexOtherNames.get(name);
-                    if (row[_indexNewNames.get(name)] != table[r][c])
+                    if (!row[_indexNewNames.get(name)].equals(table[r][c]))
                         break;  //continue to next row  //Todo: check if this really break the loop of 'n'
                 }
             }
@@ -280,7 +284,8 @@ public class Factor {
                 break;  //Todo: check if this really break the loop of 'r'
             }
         }
-        if (!find) System.err.println("not possible that not find any row appropriate");    //Todo: dbs
+        if (!find)
+            System.err.println("not possible that not find any row appropriate");    //Todo: dbs
         return Double.parseDouble(table[r][table[0].length -1]);
     }
 
@@ -513,9 +518,18 @@ public class Factor {
         return _addNum;
     }
 
+    //print for easy debug
+    public String toString() {
+        String ans = "";
+        for (int i = 0; i < this._table.length; i++) {
+            ans += Arrays.toString(this._table[i]) + "\n";
+        }
+        return ans;
+    }
 
 
-}
+
+    }
 
 
 

@@ -111,20 +111,33 @@ public class VariableElimination {
 
     private void j_e(String byVar, List<Factor> relevant) {
         Factor je_Factor;
+        boolean onlyOne = false;
         if (relevant.size()==0)
             return;
+        if (relevant.size()==1)
+            onlyOne = true;
         while (relevant.size() > 1)    //!=
         {
             Factor fmin = minF(relevant);
+//            System.out.println("min: \n"+fmin);
             Factor fbig = minF(relevant);
+//            System.out.println("big: \n"+fbig);
             je_Factor = fbig.join(fmin, byVar);
+//            System.out.println("Join: \n"+je_Factor);
             _mulNum += fbig.get_mulNum();
             relevant.add(je_Factor);
         }
         je_Factor = relevant.get(0).eliminate(byVar);
+//        System.out.println("Elim: \n"+je_Factor);
         _addNum += relevant.get(0).get_addNum();
         if (je_Factor.getNameV().size() != 1 || _factors.size()==0)   //remove factor if is nameV size = 1, because nameV = {'_P_'}
-            _factors.add(je_Factor);
+            if (onlyOne)
+            {
+                _factors.remove(0); //Todo: --- Try ---
+                _factors.add(je_Factor);
+            }
+            else
+                _factors.add(je_Factor);
 //        if (je_Factor.getNameV().size()==0)
 //            delete this factor...
 
@@ -206,8 +219,8 @@ public class VariableElimination {
                 }
             }
             if (!containIndependent) {   //create factor only if not contain independent variable
-            Factor f = new Factor(_net.getVar(varName), _net);
-            _factors.add(f);
+                Factor f = new Factor(_net.getVar(varName), _net);
+                _factors.add(f);
             }
         }
     }

@@ -1,3 +1,5 @@
+import org.junit.jupiter.api.parallel.Execution;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -21,11 +23,21 @@ public class RunAll {
     public String runTxt() {
         while (qTxt.size() != 0){
             String line = (qTxt.poll());
-            if (line.charAt(0) != 'P')
-                ans += go2BBAlgo(line);
+            if (line.charAt(0) != 'P') {
+                try {
+                    ans += go2BBAlgo(line);
+                } catch (Exception e) {
+                    ans += "\n";
+                }
+            }
             if (line.charAt(0) == 'P') {
-                ans += go2VarElim(line);
-                net = ReadFromXml.readBuild(xmlfile);   //read again because of ovveraid this net in VariableElimination algo
+                try { // //Todo! back this try-catch ! ! !
+                    ans += go2VarElim(line);
+                    net = ReadFromXml.readBuild(xmlfile);   //read again because of ovveraid this net in VariableElimination algo
+                }
+                catch (Exception e) {
+                    ans += "\n";
+                }
             }
         }
         return ans;
@@ -93,7 +105,7 @@ public class RunAll {
         while (line.charAt(i) != ')'){
             if (line.charAt(i) == '=')
                 num++;
-        i++;
+            i++;
         }
         return num;
     }
@@ -121,10 +133,10 @@ public class RunAll {
                 while (i < line.length() && line.charAt(i) != '='){  //create var name from the line
                     varName += line.charAt(i);
                     i++;
+                }
+                given.add(varName);
             }
-            given.add(varName);
         }
-    }
         bbAlgo = new BayesBall(a, given, net);
         return bbAlgo.isDependence(b) + "\n";
     }
