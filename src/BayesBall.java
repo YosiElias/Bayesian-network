@@ -1,5 +1,10 @@
 import java.util.*;
 
+/**
+ * This class implements the BayesBall algorithm
+ * we learned it in class
+ */
+
 public class BayesBall {
     private Variable a;
     private List<String> given;
@@ -128,7 +133,6 @@ public class BayesBall {
         while (q_Var.size() != 0) {
             Variable j = q_Var.poll();
             if (!newRelevantVar.containsValue(j)) {
-//                if (!this.given.contains(j.name))   //Todo: try not add the given to relevant and reduce 'mull' and 'add'
                     newRelevantVar.put(j.name, j); //"color" 'v' as visited
 
                 for (Variable parent : j.getParents()) {

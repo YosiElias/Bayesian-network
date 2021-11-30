@@ -3,6 +3,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * This class builds a Basin network for
+ * the benefit of implementing the algorithms in this task
+ */
 public class BayesianNetwork {
 
     // the underlying map recording all variables.
@@ -16,15 +21,6 @@ public class BayesianNetwork {
         net = new LinkedHashMap<String, Variable>();
         names = new ArrayList<String>();
     }
-
-//    //copy constructor
-//    public BayesianNetwork(BayesianNetwork other) {
-//        net = new LinkedHashMap<String, Variable>();
-//        for (String varName:other.getNames()) {
-//            Variable v = new Variable(other.getVar(varName))
-//        }
-//        names = new ArrayList<String>();
-//    }
 
 
     public Variable getVar(String name) {

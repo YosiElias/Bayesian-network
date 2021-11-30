@@ -10,3 +10,4 @@ P(J=T|B=T) A-E-M
 P(J=T|B=T) M-E-A
 P(A=T|J=T,M=T,E=T,B=T)
 P(M=T|A=T) B-E-J
+P(B=T|J=T,M=T)

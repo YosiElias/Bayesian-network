@@ -1,6 +1,13 @@
 import java.text.DecimalFormat;
 import java.util.*;
 
+/**
+ * This class is used to
+ * create a Factor object
+ * in order to use it in
+ * the Variable Elimination algorithm
+ */
+
 public class Factor {
     private List<String> nameV;
     private List<String> commonNames;
@@ -20,13 +27,12 @@ public class Factor {
     public Variable get_v() {
         return _v;
     }
-
+    // First constructor:
     public Factor(Variable v, BayesianNetwork net){
         _v = v;
         _net = net;
         String [][] table = v.getTable();
         nameV = new ArrayList<String>();
-//        nameDiffFromFmin = new ArrayList<String>(); //names that not in this factor but yes in 'fmin' factor
         commonNames = new ArrayList<String>(); //names that are in this factor and in 'fmin' factor
         List<Variable> parents = v.getParents();
         for (int i = 0; i < parents.size(); i++) {
@@ -34,7 +40,6 @@ public class Factor {
         }
         nameV.add(v.name);
         nameV.add("_P_");
-        if (nameV.size()!=table[0].length) System.err.println("Eror value: 'nameV' have to be the same size of 'table'");  //Todo: dbs
         List<Integer> oneValueColumns = oneValueColumns(table);
         _table = new String[table.length][table[0].length - oneValueColumns.size()];
         //deep copy & reduce one value columns:
@@ -52,7 +57,33 @@ public class Factor {
         }
 
     }
+    // Second constructor:
+    public Factor(String[][] table, List<String> names, BayesianNetwork net){
+        _net = net;
+        nameV = new ArrayList<String>();
+        commonNames = new ArrayList<String>(); //names that are in this factor and in 'fmin' factor
+        //deep copy of names:
+        for (int i = 0; i < names.size(); i++) {
+            nameV.add(names.get(i));
+        }
+        List<Integer> oneValueColumns = oneValueColumns(table);
+        _table = new String[table.length][table[0].length - oneValueColumns.size()];
+        //deep copy & reduce one value columns:
+        for (int r = 0; r < table.length; r++) {     //run on rows
+            for (int c = 0, thisC = 0; c < table[0].length; c++) {        //run on columns
+                if (!oneValueColumns.contains(c)) {
+                    _table[r][thisC] = table[r][c];
+                    thisC++;
+                }
+            }
+        }
+        _indexOriginalNames = new LinkedHashMap<String, Integer>();
+        for (int i = 0; i < nameV.size(); i++) {
+            _indexOriginalNames.put(nameV.get(i), i);
+        }
+    }
 
+    //checks if there is only one value in a column:
     private List<Integer> oneValueColumns(String[][] table) {
         List<Integer> ans  = new ArrayList<Integer>();
         List<String> nameToRemove = new ArrayList<String>();
@@ -69,48 +100,21 @@ public class Factor {
                     nameToRemove.add(nameV.get(c));
                 }
             }
-        } //Todo: --- try ---
+        }
         for (String name : nameToRemove){
             nameV.remove(name);
         }
         return ans;
     }
 
-    public Factor(String[][] table, List<String> names, BayesianNetwork net){
-        _net = net;
-        nameV = new ArrayList<String>();
-//        nameDiffFromFmin = new ArrayList<String>(); //names that not in this factor but yes in 'fmin' factor
-        commonNames = new ArrayList<String>(); //names that are in this factor and in 'fmin' factor
-        //deep copy of names:
-        for (int i = 0; i < names.size(); i++) {
-            nameV.add(names.get(i));
-        }
-        if (nameV.size()!=table[0].length && nameV.size()+1!=table.length)  //
-            System.err.println("Eror value: 'nameV' have to be the same size of 'table'");  //Todo: dbs
-        List<Integer> oneValueColumns = oneValueColumns(table);
-        _table = new String[table.length][table[0].length - oneValueColumns.size()];
-        //deep copy & reduce one value columns:
-        for (int r = 0; r < table.length; r++) {     //run on rows
-            for (int c = 0, thisC = 0; c < table[0].length; c++) {        //run on columns
-                if (!oneValueColumns.contains(c)) {
-                    _table[r][thisC] = table[r][c];
-                    thisC++;
-                }
-            }
-        }
-        _indexOriginalNames = new LinkedHashMap<String, Integer>();
-        for (int i = 0; i < nameV.size(); i++) {
-            _indexOriginalNames.put(nameV.get(i), i);
-        }
-    }
-
-
-
-
-
     public List<String> getNameV() { return nameV; }
 
-
+    /**
+     * the main function for the join
+     * @param fmin the small factor
+     * @param byVar variable name to join by
+     * @return the joined factor
+     */
     public Factor join(Factor fmin, String byVar) {
         indexOfOther(fmin);
         outcomeOfOther(fmin);
@@ -121,21 +125,13 @@ public class Factor {
         String[][] newTable = new String[rows][columns];
         //deep copy from original table of the factor:
         int r= 0, c= 0;
-//        while (r<newTable.length)
-//        {
-            for (; r < newTable.length; r++) {     //run on rows of new table and write value T/F etc.
-                for (c=0; c < this._table[0].length -1; c++) {        //run on columns
-                    newTable[r][c] = this._table[r % this._table.length][c];    //write value in 'loop' of original table on the new table
-                }
+        for (; r < newTable.length; r++) {     //run on rows of new table and write value T/F etc.
+            for (c=0; c < this._table[0].length -1; c++) {        //run on columns
+                newTable[r][c] = this._table[r % this._table.length][c];    //write value in 'loop' of original table on the new table
             }
-//        }
-        //continue write the table from other factor:
+        }
 
-//        for (; r < this._table.length; r++) {     //run on rows
-//            for (; c < this._table[0].length; c++) {        //run on columns
-//                newTable[r][c] = this._table[r][c];
-//            }
-//        }
+        //continue write the table from other factor:
         boolean firstloop = true;
         int slice=0;    //"empty" mining because have to change is value at the start of loop
         for (int i = 0; i < nameDiffFromFmin.size(); i++) { //add all the names that not in original factor (this)
@@ -144,12 +140,14 @@ public class Factor {
             {
                 firstloop = false;
                 slice = rows / outcomeOfMin.size();
-                if (slice==0) System.err.println("slice can't be 0!");  //Todo: dbs, internal test
+                //Self checks:
+                if (slice==0) System.err.println("slice can't be 0!");
             }
             else
             {
-                slice = slice / outcomeOfMin.size();    //Todo! chcange 'rows / outcomeOfMin.size()' to 'slice / outcomeOfMin.size()'
-                if (slice % outcomeOfMin.size()!=0)     System.err.println("number of rows is incorrect ");     //Todo: delete before submit
+                slice = slice / outcomeOfMin.size();
+                //Self checks:
+                if (slice % outcomeOfMin.size()!=0)     System.err.println("number of rows is incorrect ");
             }
             r=0;
             while (r<rows){ //run on all rows
@@ -163,59 +161,15 @@ public class Factor {
             c++;  //go to the next var (in the next column)
         }
 
-
         //fill the value of 'P' in newTable:
         for (int i = 0; i < newTable.length; i++)      //run on rows of new table
         {
             String[] row = newTable[i];
             double pOfOriginal = getPofRowOriginal(row);
             double pOfFmin = getPofRowOther(row, fmin._table);
-//            DecimalFormat df = new DecimalFormat("#0.00000");
-            newTable[i][newTable[0].length-1] = ""+pOfOriginal * pOfFmin;   //Todo: maybe add it here -> df.format(
+            newTable[i][newTable[0].length-1] = ""+pOfOriginal * pOfFmin;
             _mulNum++;
         }
-
-
-//        List<Integer> doneRows = new ArrayList<Integer>();
-        //fill the value of 'P' in newTable:
-//        for (int i = 0; i < newTable.length; i++)      //run on rows of new table
-//        {
-//            if (!doneRows.contains(i))  //only if we didn't done to fill this row
-//            {
-//                String[] valueOfCommon = getValueOfCommon(newTable, i, commonNames);
-//                List<Integer> colmnofCommon = getColmnOfVnames(nameV, commonNames);
-//                List<Integer> rowsOfcommon = getRowOfCommon(newTable, valueOfCommon, colmnofCommon);
-//                for (int j = 0; j < rowsOfcommon.size(); j++)
-//                { //add all this rows to done rows
-//                    doneRows.add(rowsOfcommon.get(j));
-//                }
-//                for (int j = 0; j < rowsOfcommon.size(); j++)
-//                {
-//                    int row = rowsOfcommon.get(j);
-//                    if (commonNames != nameV)   //if not all names are common:
-//                    {
-//                        for (int k = 0; k < newTable[row].length; k++) {    //run on columns of this row
-//                            if (!colmnofCommon.contains(k)) //run only on columns that not in common
-//                            {
-//                                if (_indexOriginalNames.containsKey(nameV.get(k)))  //if the name belong to original factor (this):
-//                                {
-//                                    double
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Todo: dbs, only for testing.
-//        System.out.println("********************** - Join by - "+byVar+" - "+this.nameV+" & "+fmin.nameV+"**********************");
-//        for (int i = 0; i < newTable.length; i++) {
-//            System.out.println("\n"+ Arrays.toString(newTable[i]));
-//        }
-//        System.out.println("**********************\n\n**********************");
-
-
         return new Factor(newTable,nameV, _net);
     }
 
@@ -275,17 +229,18 @@ public class Factor {
                 {
                     int c = _indexOtherNames.get(name);
                     if (!row[_indexNewNames.get(name)].equals(table[r][c]))
-                        break;  //continue to next row  //Todo: check if this really break the loop of 'n'
+                        break;  //continue to next row
                 }
             }
             if (n == nameV.size() - 1)  //i.e. all the name are equal
             {
                 find = true;
-                break;  //Todo: check if this really break the loop of 'r'
+                break;
             }
         }
+        //Self checks:
         if (!find)
-            System.err.println("not possible that not find any row appropriate");    //Todo: dbs
+            System.err.println("not possible that not find any row appropriate");
         return Double.parseDouble(table[r][table[0].length -1]);
     }
 
@@ -303,26 +258,19 @@ public class Factor {
                 {
                     int c = _indexOriginalNames.get(name);
                     if (row[_indexNewNames.get(name)] != this._table[r][c])
-                        break;  //continue to next row  //Todo: check if this really break the loop of 'n'
+                        break;  //continue to next row
                 }
             }
             if (n == nameV.size() - 1)  //i.e. all the name are equal
             {
                 find = true;
-                break;  //Todo: check if this really break the loop of 'r'
+                break;
             }
         }
-        if (!find) System.err.println("not possible that not find any row appropriate");    //Todo: dbs
+        //Self checks:
+        if (!find) System.err.println("not possible that not find any row appropriate");
         return Double.parseDouble(this._table[r][_table[0].length -1]);
     }
-
-
-
-
-
-
-
-
 
     private void indexOfOther(Factor fmin) {
         _indexOtherNames = new LinkedHashMap<String, Integer>();
@@ -330,23 +278,6 @@ public class Factor {
             _indexOtherNames.put(fmin.getNameV().get(i), i);
         }
     }
-
-    private List<Integer> getRowOfCommon(String[][] newTable, String[] valueOfCommon, List<Integer> colmnOfCommon) {
-        List<Integer> ans  = new ArrayList<Integer>();
-        for (int r = 0; r < newTable.length; r++)
-        {
-            int i = 0;
-            for (; i < colmnOfCommon.size(); i++)
-            {
-                if (newTable[r][colmnOfCommon.get(i)] != valueOfCommon[i])
-                    break;  //continue to the next line
-            }
-            if (i == colmnOfCommon.size() - 1)  //i.e. all the value in this row
-                ans.add(r);
-        }
-        return ans;
-    }
-
 
     /**
      *
@@ -389,8 +320,7 @@ public class Factor {
             if (!this.getNameV().contains(minNameV))
             {
                 nameDiffFromFmin.add(minNameV);
-                this.nameV.add(nameV.size()-1, minNameV);   //Todo: nameV.size() - 2,  - check this change
-//                if (!nameV.get(nameV.size()-2).equals(_v.name)) System.err.println("Eror insert: insert 'fName' in the wrong place on 'nameV'");  //Todo: dbs
+                this.nameV.add(nameV.size()-1, minNameV);
             }
             else
             {
@@ -411,7 +341,6 @@ public class Factor {
             {
                 int outSize = _outcomFmin.get(minNameV).size();
                 mulSum *= outSize;
-
             }
         }
         return mulSum;
@@ -427,12 +356,12 @@ public class Factor {
         this.nameV.remove(byVar);
         int rows = this._table.length / _outcomThis.get(byVar).size();
         int columns = this._table[0].length -1;
-        if (columns == 1)   //is empty factor   //Todo: testing for empty factor and check what do whis that after build it
+        if (columns == 1)   //is empty factor
         {
-            if (nameV.get(0) != "_P_") System.err.println("The factor is not really empty");    //Todo: dbs
-            return new Factor(this._table, this.nameV,_net);    //Todo: check if nameV really contain only 'P'
+            //Self checks:
+            if (nameV.get(0) != "_P_") System.err.println("The factor is not really empty");
+            return new Factor(this._table, this.nameV,_net);
         }
-//        _addNum = rows;
         String[][] newTable = new String[rows][columns];
         String out = _outcomThis.get(byVar).get(0);
         int byVarColumn = _indexOriginalNames.get(byVar);
@@ -456,18 +385,8 @@ public class Factor {
             double pOfElim = getPofElim(row, byVar);
             newTable[i][newTable[0].length-1] = ""+pOfElim;
         }
-
-
-
         this._indexOriginalNames.clear();
         this._outcomThis.clear();
-//        System.out.println("********************** - elimination by - "+byVar+ " - **********************");
-////         Todo: dbs, only for testing.
-//        for (int i = 0; i < newTable.length; i++) {
-//            System.out.println("\n"+ Arrays.toString(newTable[i]));
-//        }
-//        System.out.println("**********************\n\n**********************");
-
         return new Factor(newTable, this.nameV, _net);
     }
 
@@ -480,20 +399,21 @@ public class Factor {
             for (n = 0; n < nameV.size()-1; n++)  //run on all names in newTable
             {
                 String name = nameV.get(n);
-                if (name != byVar) //if name is byVar name: //Todo: not need this if. dbs
+                if (name != byVar) //if name is byVar name:
                 {
                     int c = _indexOriginalNames.get(name);
-                    if (row[n] != this._table[r][c])     //row[_indexNewNames.get(name)]
-                        break;  //continue to next row  //Todo: check if this really break the loop of 'n'
+                    if (row[n] != this._table[r][c])
+                        break;  //continue to next row
                 }
             }
             if (n == nameV.size() - 1)  //i.e. all the name are equal
             {
                 ans += Double.parseDouble(this._table[r][_table[0].length -1]);
-                _addNum++;    //Todo: check if this is not the way noam want to count '_addNum'
+                _addNum++;
             }
         }
-        if (ans==0) System.err.println("not possible that not find any row appropriate");    //Todo: dbs
+        //Self checks:
+        if (ans==0) System.err.println("not possible that not find any row appropriate");
         _addNum--;
         return ans;
     }
@@ -502,11 +422,10 @@ public class Factor {
     public double[] getValue(String qValue) {
         double[] ans = new double[2];
         ans[1] = 0;
-        DecimalFormat df = new DecimalFormat("#0.00000");
         for (int i = 0; i < this._table.length; i++) {
             ans[1] += Double.parseDouble(this._table[i][1]);
             if (this._table[i][0].equals(qValue))
-              ans[0] =  Double.parseDouble(this._table[i][1]);
+                ans[0] =  Double.parseDouble(this._table[i][1]);
         }
         return ans;
     }
@@ -527,9 +446,7 @@ public class Factor {
         return ans;
     }
 
-
-
-    }
+}
 
 
 

@@ -3,7 +3,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,6 +13,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+
+/**
+ * This class reads from
+ * an xml file using a static function
+ */
 public class ReadFromXml {
 
 
@@ -24,8 +28,6 @@ public class ReadFromXml {
 
         try {
 
-            // optional, but recommended
-            // process XML securely, avoid attacks like XML External Entities (XXE)
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 
             // parse XML file
@@ -33,12 +35,8 @@ public class ReadFromXml {
 
             Document doc = db.parse(new File(fileName));
 
-            // optional, but recommended
-            // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
             doc.getDocumentElement().normalize();
 
-//            System.out.println("Root Element :" + doc.getDocumentElement().getNodeName());
-//            System.out.println("------");
 
             // get <VARIABLE>
             NodeList listVar = doc.getElementsByTagName("VARIABLE");

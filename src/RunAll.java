@@ -1,9 +1,12 @@
 import org.junit.jupiter.api.parallel.Execution;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
+/**
+ * This class runs all queries
+ * from the text file
+ */
 public class RunAll {
     public BayesianNetwork net;
     public Queue<String> qTxt;
@@ -31,9 +34,9 @@ public class RunAll {
                 }
             }
             if (line.charAt(0) == 'P') {
-                try { // //Todo! back this try-catch ! ! !
+                try {
                     ans += go2VarElim(line);
-                    net = ReadFromXml.readBuild(xmlfile);   //read again because of ovveraid this net in VariableElimination algo
+                    net = ReadFromXml.readBuild(xmlfile);   //read again because of override this net in VariableElimination algo
                 }
                 catch (Exception e) {
                     ans += "\n";
@@ -88,14 +91,6 @@ public class RunAll {
             i++;    //skip the char '-'
             order.add(ordName); //order.get(0) is the first at order and so on
         }
-
-        //Todo: tester printing: (to delete before submit)
-//        System.out.println("\nQ: "+qName+"\tQ value: "+qValue);
-//        for (int j = 0; j < evidens.length; j++) {
-//            System.out.println("\n"+Arrays.toString(evidens[j]));
-//        }
-//        System.out.println("\norder: "+Arrays.toString(order.toArray()));
-
         varElimAlgo = new VariableElimination(qName, qValue, evidens, order, net);
         return varElimAlgo.get_pAns() + "\n";
     }

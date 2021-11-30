@@ -1,6 +1,15 @@
 import java.text.DecimalFormat;
 import java.util.*;
 
+
+/**
+ * This class implements the
+ * Variable Elimination Algorithm as we learned it in class.
+ *
+ * While reducing the number of operations
+ * by using a baseball algorithm and further
+ * reducing factors that are ancestors.
+ */
 public class VariableElimination {
     private String _qName;
     private String _qValue;
@@ -14,7 +23,6 @@ public class VariableElimination {
     private BayesianNetwork _net;
     private List<String> _Names;
     private List<String> _independent;
-    private final DecimalFormat _df = new DecimalFormat("#0.00000");
 
     public VariableElimination(String qName, String qValue, String[][] evidens, List<String> order, BayesianNetwork net) {
         _net = net;
@@ -35,10 +43,9 @@ public class VariableElimination {
         _addNum = 0;
     }
 
-    //main function of vE algo
 
     /**
-     * main function of vE algo
+     * main function of VE algo
      * @return
      */
     private String VEalgo() {
@@ -78,15 +85,6 @@ public class VariableElimination {
                 j_e(byVar, relevant);
             }
         }
-//        for (int i = 0; i < _Names.size(); i++) {
-//            if (!_order.contains(_Names.get(i)) && !_Names.get(i).equals(_qName))
-//                if (relevantVar.containsKey(_Names.get(i)))
-//                {
-//                    String byVar = _Names.get(i);
-//                    List<Factor> relevant = relevantFactor(byVar, relevantVar);
-//                    j_e(byVar,relevant);
-//                }
-//        }
         // Make Join & Eliminate on factors contain the qurie-variable:
         List<Factor> relevant = relevantFactor(_qName, relevantVar);
         for (int i = 0; i < _factors.size(); i++) { //remove not relevant factors from '_factor', i.e. evidence etc.
@@ -94,7 +92,6 @@ public class VariableElimination {
             if (!relevant.contains(f))
                 _factors.remove(f);
         }
-//        if (relevant.size() >1)   //Todo: seems like not need this if
         j_e(_qName,relevant);
         double[] finalTable = _factors.get(0).getValue(_qValue);
         double prob=Double.MAX_VALUE;
@@ -116,34 +113,26 @@ public class VariableElimination {
             return;
         if (relevant.size()==1)
             onlyOne = true;
-        while (relevant.size() > 1)    //!=
+        while (relevant.size() > 1)
         {
             Factor fmin = minF(relevant);
-//            System.out.println("min: \n"+fmin);
             Factor fbig = minF(relevant);
-//            System.out.println("big: \n"+fbig);
             je_Factor = fbig.join(fmin, byVar);
-//            System.out.println("Join: \n"+je_Factor);
             _mulNum += fbig.get_mulNum();
             relevant.add(je_Factor);
         }
         je_Factor = relevant.get(0).eliminate(byVar);
-//        System.out.println("Elim: \n"+je_Factor);
         _addNum += relevant.get(0).get_addNum();
         if (je_Factor.getNameV().size() != 1 || _factors.size()==0)   //remove factor if is nameV size = 1, because nameV = {'_P_'}
             if (onlyOne)
             {
-                _factors.remove(0); //Todo: --- Try ---
+                _factors.remove(0);
                 _factors.add(je_Factor);
             }
             else
                 _factors.add(je_Factor);
-//        if (je_Factor.getNameV().size()==0)
-//            delete this factor...
-
     }
 
-//    private Factor join(Factor f1, Factor f2) {
 
     /**
      * @return min factor size to start with.
@@ -152,7 +141,6 @@ public class VariableElimination {
         Factor min = relevant.get(0);
         for (Factor f:relevant)
         {
-//            if (f.getNameV().size() < min.getNameV().size())  //change un-safe, Todo: check this change
             if (f.getSizeOfTable() < min.getSizeOfTable())
                 min = f;
             else if (f.getSizeOfTable() == min.getSizeOfTable())
@@ -163,17 +151,18 @@ public class VariableElimination {
         return min;
     }
 
+
     //sum all names in factor and return the one with min haski value
     private Factor selectByHaski(Factor f, Factor min) {
         int fSize = 0, minSize = 0;
         for (int i = 0; i < f.getNameV().size(); i++) {
             for (int j = 0; j < f.getNameV().get(i).length(); j++) {
-                fSize += (int)f.getNameV().get(i).charAt(j);    //Todo: check this cast if work and give the Haski value
+                fSize += (int)f.getNameV().get(i).charAt(j);
             }
         }
         for (int i = 0; i < min.getNameV().size(); i++) {
             for (int j = 0; j < min.getNameV().get(i).length(); j++) {
-                minSize += (int)min.getNameV().get(i).charAt(j);    //Todo: check this cast if work and give the Haski value
+                minSize += (int)min.getNameV().get(i).charAt(j);
             }
         }
         if (minSize<fSize)
@@ -192,12 +181,8 @@ public class VariableElimination {
         List<Factor> relevant = new ArrayList<Factor>();
         for (Factor f:_factors)
         {
-            if (f.getNameV().contains(byVar))   //Todo: opshion but look like not relevant becouse the factor is filtered by relavant   //if this factor create from other factor and not directly from variable
-//                if (f.get_v() == null)
+            if (f.getNameV().contains(byVar))   //if this factor create from other factor and not directly from variable
                 relevant.add(f);
-//                else if (relevantVar.containsKey(f.get_v().name))   //if create from variable but this variable is relevant by BBAlgo & par=parent filter
-//                    relevant.add(f);
-
         }
         return relevant;
     }
@@ -229,9 +214,8 @@ public class VariableElimination {
      * update all net to relevant table without 'not needed' value
      */
     private void reduceCpts() {
-        for (String varName:_net.getNames())   //Todo: --- try --- _Names
+        for (String varName:_net.getNames())
         {
-            //Todo: add delete of evidence from parent of other variable
             if (_mapEvidence.containsKey(varName)) //if the variable is evidence:
             {
                 Variable v = _net.getVar(varName);
@@ -252,7 +236,6 @@ public class VariableElimination {
      */
     private double isCPT() {
         Variable v = _net.getVar(_qName);
-        //check hachala - du-kivunit, and than get parent==evidens
         for (int i = 0; i < _evidence.length; i++) {
             if (!v.getParents().contains(_net.getVar(_evidence[i][0])))
                 return Double.MAX_VALUE;    //q not in CPT
@@ -260,9 +243,9 @@ public class VariableElimination {
         if (_evidence.length < v.getParents().size())
             return Double.MAX_VALUE;    //q not in CPT. bicouse evidens C parent ->  evidens =< parent, and if evidens < parent there is a parent 'i' that is not evidens
         double P_q = pOfCPT(v);
-
         return P_q;
     }
+
 
     /**
      * @return value of specific rows from CPT
@@ -294,9 +277,9 @@ public class VariableElimination {
         String[][] table = v.getTable();
         List<Integer> newList = new ArrayList<Integer>();
 
-        if (list==null){    //Todo: check if get into this if (need to get into)
+        if (list==null){
             list = new LinkedList<Integer>();
-            for (int r = 0; r < table.length; r++) { list.add(r); } //List of rows to manage 'mahakav'
+            for (int r = 0; r < table.length; r++) { list.add(r); } //List of rows
         }
 
         int prntIndex = table[0].length - 2;
@@ -321,9 +304,9 @@ public class VariableElimination {
         int prntIndex = v.getParents().indexOf(_net.getVar(namePrnt));
         String[][] table = v.getTable();
 
-        if (list==null){    //Todo: check if get into this if (need to get into)
+        if (list==null){
             list = new LinkedList<Integer>();
-            for (int r = 0; r < table.length; r++) { list.add(r); } //List of rows to manage 'mahakav'
+            for (int r = 0; r < table.length; r++) { list.add(r); } //List of rows
         }
 
         for (int i = 0; i < list.size(); i++) {
@@ -353,51 +336,5 @@ public class VariableElimination {
         this._pAns = VEalgo();
         return this._pAns;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    /**
-//     *
-//     * @param v q
-//     * @return full value of double, need to format to 5 num after '.'
-//     */
-//    private double pOfq(Variable v) {
-//        String[][] table = v.getTable();
-//        int rOfAns = -1;    //Todo: it is kind of Test for not init value at the loops
-//        List<Integer> rows = new LinkedList<Integer>();
-//        for (int r = 0; r < table.length; r++) { rows.add(r); } //List of rows to manage 'mahakav'
-//
-//
-//        for (int r = 0; r < table.length; r++)
-//        {
-//            if (rows.contains(r))
-//            {
-//                for (int c = 0; c < table[0].length -1; c++)  //run on all the columns of table of v (=q)
-//                {
-//                    if (c != table[0].length-2) {
-////                        if (!table[c][r].equals(valueOfEvidns(c, v.getParents())))
-////                            break;
-//                    }
-//                    else if (c==table[0].length-2){
-//                        if (table[c][r].equals(_qValue))
-//                            rOfAns = r; //save r of ans
-//                    }
-//                }
-//            }
-//        }
-//        if (rOfAns == -1) System.err.println("Eror: 'rOfAns' not get chang in the loops");  //Todo: delete before submit
-//        return Double.parseDouble(table[rOfAns][table[0].length]);
-//    }
 
 }

@@ -1,12 +1,16 @@
 import java.util.*;
 
+
+/**
+ * This class creates a Variable object
+ * for the purpose of building the Bayesian network
+ */
 public class Variable {
         public final String name;
         private List<Variable> parents;
         private List<Variable> children;
         private List<String> outCome;
         private List<List<String>> keyToTable;
-        //        private Map<List<String>, Double> table;
         private String[][] table;
 
 
@@ -18,15 +22,6 @@ public class Variable {
                 outCome = new ArrayList<String>();
                 keyToTable = new ArrayList<List<String>>();
         }
-
-//        public Variable(Variable other) {
-//                this.name = other.name;
-//                parents = new ArrayList<Variable>();
-//                children = new ArrayList<Variable>();
-//                outCome = new ArrayList<String>();
-//                keyToTable = new ArrayList<List<String>>();
-//        }
-
 
         public void makeTable(String [] probaArr){
                 int row = outCome.size(), col = 2 + parents.size();
@@ -45,7 +40,8 @@ public class Variable {
                 for (Variable parent: parents) { //run on all the parents of V
                         if (!firstloop) {
                                 slice = slice / parent.outCome.size();
-                                if (row % parent.outCome.size()!=0)     System.err.println("number of rows is incorrect ");     //Todo: delete before submit
+                                // Self checks:
+                                if (row % parent.outCome.size()!=0)     System.err.println("number of rows is incorrect ");
                         }
                         firstloop=false;
                         int r=0;
@@ -92,6 +88,7 @@ public class Variable {
 
         public void addOutCome(String outCome) { this.outCome.add(outCome); }
 
+        //string to easy self testing:
         public String toString(){
                 return "--------------------------------------------"+
                         "\nName: "+name+
@@ -157,46 +154,4 @@ public class Variable {
                 table = newTable;
         }
 
-
-//        public Map<List<String>, Double> getTable() { return table; }
-
-//        public void addTable(List<String> condition, Double probability) {
-//                this.table.put(condition, probability);
-//                this.keyToTable.add(condition);
-//        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
